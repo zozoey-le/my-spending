@@ -142,23 +142,41 @@ function updateAuthUI(user){
 
 /* ══ ACCOUNT PAGE ══ */
 function showAccountPage(){
-  document.getElementById('tab-tracker').parentElement.parentElement.style.display='none';
+  // Hide main tabs and content
   document.querySelector('.main-tabs').style.display='none';
-  document.querySelector('.app-header').style.display='flex';
+  document.querySelectorAll('.tab-panel').forEach(p=>p.style.display='none');
   document.querySelector('footer').style.display='none';
+  
+  // Show account page
   document.getElementById('account-page').style.display='block';
   
   if(currentUser){
     document.getElementById('account-email').value=currentUser.email;
+    document.getElementById('account-name').value=currentUser.displayName||'';
   }
 }
 
 function goBackToTracker(){
-  document.getElementById('tab-tracker').parentElement.parentElement.style.display='block';
+  // Hide account page
+  document.getElementById('account-page').style.display='none';
+  
+  // Show main content
   document.querySelector('.main-tabs').style.display='flex';
   document.querySelector('footer').style.display='block';
-  document.getElementById('account-page').style.display='none';
+  document.getElementById('tab-tracker').style.display='block';
+  document.getElementById('tab-tracker').classList.add('active');
+  
+  // Reset other tabs
+  document.getElementById('tab-summary').style.display='none';
+  document.getElementById('tab-budget').style.display='none';
+  document.querySelectorAll('.main-tab').forEach((tab,i)=>{
+    if(i===0)tab.classList.add('active');
+    else tab.classList.remove('active');
+  });
+  
+  // Close dropdown
   document.getElementById('user-dropdown').style.display='none';
+  
   renderTracker();
 }
 
@@ -280,16 +298,21 @@ auth.onAuthStateChanged(async(user)=>{
   if(user){
     txArr=await loadTx();
     budgets=await loadBudgets();
+    // Hide login prompt and show app
+    document.getElementById('login-prompt').style.display='none';
+    document.querySelector('.main-tabs').style.display='flex';
+    document.querySelector('footer').style.display='block';
+    document.querySelectorAll('.main-tab').forEach(tab=>tab.style.opacity='1');
     renderTracker();
     showWelcome();
   } else {
     txArr=[];
     budgets={};
-    document.getElementById('tab-tracker').style.display='block';
-    document.getElementById('tab-summary').style.display='block';
-    document.getElementById('tab-budget').style.display='block';
-    const mainTabs=document.querySelectorAll('.main-tab');
-    mainTabs.forEach(tab=>tab.style.opacity='0.5');
+    // Show login prompt and hide app
+    document.getElementById('login-prompt').style.display='flex';
+    document.querySelector('.main-tabs').style.display='none';
+    document.querySelectorAll('.tab-panel').forEach(p=>p.style.display='none');
+    document.querySelector('footer').style.display='none';
   }
 });
 
@@ -716,3 +739,12 @@ function closeWelcome(){document.getElementById('welcome-overlay').style.display
 /* ── INIT ── */
 document.getElementById('inp-date').value=todayStr();
 populateCats();
+
+// Close user dropdown when clicking outside
+document.addEventListener('click',(event)=>{
+  const userMenuWrapper=document.getElementById('user-menu-wrapper');
+  const userDropdown=document.getElementById('user-dropdown');
+  if(userMenuWrapper&&!userMenuWrapper.contains(event.target)){
+    userDropdown.style.display='none';
+  }
+});

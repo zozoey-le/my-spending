@@ -222,6 +222,18 @@ footer{text-align:center;font-family:'Sacramento',cursive;font-size:22px;color:v
 .auth-error{color:var(--rs);font-size:12px;margin-top:8px;text-align:center;min-height:16px}
 .auth-message{color:var(--gr);font-size:12px;margin-top:8px;text-align:center;min-height:16px}
 
+/* ── LOGIN PROMPT ══ */
+.login-prompt{position:fixed;inset:0;background:var(--wm);display:flex;align-items:center;justify-content:center;z-index:50;flex-direction:column}
+.login-prompt-content{text-align:center;max-width:500px}
+.login-prompt-icon{font-size:72px;margin-bottom:20px}
+.login-prompt-content h2{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:700;font-style:italic;color:var(--td);margin-bottom:10px}
+.login-prompt-content p{font-size:16px;color:var(--tm);margin-bottom:30px;font-weight:500}
+.login-prompt-buttons{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.login-prompt-btn{padding:12px 32px;border-radius:50px;border:1.5px solid var(--pm);background:transparent;color:var(--td);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;transition:all .2s}
+.login-prompt-btn:hover{border-color:var(--pd);color:var(--pd)}
+.login-prompt-btn.primary{background:linear-gradient(135deg,var(--pd),#f0a0b8);color:#fff;border-color:var(--pd)}
+.login-prompt-btn.primary:hover{filter:brightness(.93);transform:scale(1.02)}
+
 /* ── ACCOUNT PAGE ── */
 .account-page{padding-top:65px}
 .account-header{background:var(--wm);border-bottom:2px solid var(--pm);padding:20px;display:flex;align-items:center;gap:16px;position:sticky;top:65px;z-index:50}
