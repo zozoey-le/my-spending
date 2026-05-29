@@ -6,6 +6,9 @@
 <title>My Spending 🌸</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600;1,700&family=DM+Sans:wght@400;500;600;700&family=Sacramento&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"></script>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -34,6 +37,20 @@
     <div class="header-left">
       <h1>My Spending 🌸</h1>
       <div class="tagline">let me help you track it ♡</div>
+    </div>
+  </div>
+  <div class="header-right" id="header-right">
+    <button class="auth-btn" id="signup-btn" onclick="openSignupModal()">Sign Up</button>
+    <button class="auth-btn auth-btn-primary" id="login-btn" onclick="openLoginModal()">Log In</button>
+  </div>
+  <div class="user-menu-wrapper" id="user-menu-wrapper" style="display:none">
+    <button class="user-info-btn" onclick="toggleUserMenu()">
+      <span id="user-email-display"></span>
+      <span class="dropdown-arrow">▼</span>
+    </button>
+    <div class="user-dropdown" id="user-dropdown" style="display:none">
+      <button class="dropdown-item" onclick="goToAccountInfo()">⚙️ Update account information</button>
+      <button class="dropdown-item logout-item" onclick="logoutUser()">🚪 Log out</button>
     </div>
   </div>
 </header>
@@ -157,6 +174,74 @@
     </div>
     <span class="welcome-deco-bot">🐰 🌸 🎀 🌷 ⭐</span>
     <button class="welcome-ok-btn" onclick="closeWelcome()">Để anh update ♡</button>
+  </div>
+</div>
+
+<!-- ══ SIGN UP MODAL ══ -->
+<div id="signup-modal" class="auth-modal" onclick="if(event.target===this)closeSignupModal()">
+  <div class="auth-modal-content">
+    <button class="modal-close" onclick="closeSignupModal()">✕</button>
+    <h2>Sign Up 🌸</h2>
+    <p class="modal-subtitle">Create your account</p>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="signup-email" placeholder="your@email.com">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="signup-password" placeholder="••••••••">
+    </div>
+    <button class="auth-submit-btn" onclick="handleSignup()">Create Account</button>
+    <p class="auth-toggle">Already have an account? <a href="#" onclick="event.preventDefault(); closeSignupModal(); openLoginModal();">Log In</a></p>
+    <div id="signup-error" class="auth-error"></div>
+  </div>
+</div>
+
+<!-- ══ LOG IN MODAL ══ -->
+<div id="login-modal" class="auth-modal" onclick="if(event.target===this)closeLoginModal()">
+  <div class="auth-modal-content">
+    <button class="modal-close" onclick="closeLoginModal()">✕</button>
+    <h2>Log In 🌸</h2>
+    <p class="modal-subtitle">Welcome back</p>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="login-email" placeholder="your@email.com">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="••••••••">
+    </div>
+    <button class="auth-submit-btn" onclick="handleLogin()">Log In</button>
+    <p class="auth-toggle">Don't have an account? <a href="#" onclick="event.preventDefault(); closeLoginModal(); openSignupModal();">Sign Up</a></p>
+    <div id="login-error" class="auth-error"></div>
+  </div>
+</div>
+
+<!-- ══ ACCOUNT INFORMATION PAGE ══ -->
+<div id="account-page" class="account-page" style="display:none">
+  <div class="account-header">
+    <button class="back-btn" onclick="goBackToTracker()">← Back</button>
+    <h1>Account Information 👤</h1>
+  </div>
+  <div class="account-content">
+    <div class="account-card">
+      <h2>Profile</h2>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="account-email" disabled>
+      </div>
+      <div class="form-group">
+        <label>Display Name</label>
+        <input type="text" id="account-name" placeholder="Your name">
+      </div>
+      <button class="auth-submit-btn" onclick="updateAccountInfo()">Save Changes</button>
+      <div id="account-message" class="auth-message"></div>
+    </div>
+    <div class="account-card danger-zone">
+      <h2>Danger Zone</h2>
+      <button class="delete-account-btn" onclick="deleteAccountConfirm()">Delete Account</button>
+      <p class="danger-warning">This action cannot be undone. All your data will be permanently deleted.</p>
+    </div>
   </div>
 </div>
 

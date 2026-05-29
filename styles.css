@@ -17,7 +17,22 @@ body{font-family:'DM Sans',sans-serif;background:var(--wm);color:var(--td);min-h
 .header-mascots{font-size:22px;letter-spacing:2px}
 .header-left h1{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;font-style:italic;color:var(--td);line-height:1}
 .header-left .tagline{font-family:'Sacramento',cursive;font-size:15px;color:var(--pd);margin-top:1px}
-.header-right{font-size:13px;color:var(--tm);font-weight:600;font-family:'Cormorant Garamond',serif;font-size:16px}
+.header-right{display:flex;gap:10px;align-items:center}
+.auth-btn{padding:8px 16px;border-radius:50px;border:1.5px solid var(--pm);background:transparent;color:var(--td);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;transition:all .2s}
+.auth-btn:hover{border-color:var(--pd);color:var(--pd)}
+.auth-btn-primary{background:var(--pd);color:#fff;border-color:var(--pd)}
+.auth-btn-primary:hover{filter:brightness(.93)}
+.user-menu-wrapper{position:relative}
+.user-info-btn{padding:8px 16px;border-radius:50px;border:1.5px solid var(--pm);background:transparent;color:var(--td);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;transition:all .2s;display:flex;align-items:center;gap:6px}
+.user-info-btn:hover{border-color:var(--pd);color:var(--pd)}
+.dropdown-arrow{font-size:10px;transition:transform .2s}
+.user-info-btn:hover .dropdown-arrow{transform:rotate(180deg)}
+.user-dropdown{position:absolute;top:100%;right:0;background:#fff;border:1.5px solid var(--pm);border-radius:14px;box-shadow:0 4px 16px rgba(232,130,154,.2);min-width:200px;z-index:201;margin-top:8px}
+.dropdown-item{display:block;width:100%;padding:12px 16px;background:transparent;border:none;color:var(--td);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:background .2s;text-align:left}
+.dropdown-item:first-child{border-top-left-radius:12px;border-top-right-radius:12px}
+.dropdown-item:last-child{border-bottom-left-radius:12px;border-bottom-right-radius:12px}
+.dropdown-item:hover{background:var(--pl)}
+.dropdown-item.logout-item:hover{background:#ffe8e8;color:var(--pd)}
 
 /* ── TABS ── */
 .main-tabs{display:flex;background:var(--pb);border-bottom:2px solid var(--pm);position:sticky;top:65px;z-index:99}
@@ -189,3 +204,35 @@ footer{text-align:center;font-family:'Sacramento',cursive;font-size:22px;color:v
 @keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
 @keyframes toastOut{to{opacity:0;transform:translateX(40px)}}
 @keyframes confettiFall{0%{transform:translateY(-10px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+
+/* ── AUTHENTICATION MODALS ── */
+.auth-modal{position:fixed;inset:0;background:rgba(61,38,48,.3);display:none;align-items:center;justify-content:center;z-index:500;animation:fadeIn .2s ease}
+.auth-modal.active{display:flex}
+.auth-modal-content{background:#fff;border:2px solid var(--pm);border-radius:22px;padding:32px;max-width:380px;width:92%;box-shadow:0 12px 48px #E8829A30;position:relative;animation:popIn .3s cubic-bezier(.34,1.56,.64,1)}
+.auth-modal-content h2{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;font-style:italic;color:var(--td);margin-bottom:4px}
+.modal-subtitle{font-size:13px;color:var(--tm);margin-bottom:20px;font-weight:500}
+.modal-close{position:absolute;top:14px;right:14px;background:none;border:none;color:var(--pm);font-size:20px;cursor:pointer;transition:color .2s}
+.modal-close:hover{color:var(--pd)}
+.auth-modal .form-group{margin-bottom:16px}
+.auth-submit-btn{width:100%;padding:12px;background:linear-gradient(135deg,var(--pd),#f0a0b8);color:#fff;border:none;border-radius:50px;font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;margin-bottom:14px}
+.auth-submit-btn:hover{filter:brightness(.93);transform:scale(1.01)}
+.auth-toggle{font-size:12px;color:var(--tm);text-align:center;margin-bottom:10px}
+.auth-toggle a{color:var(--pd);text-decoration:none;font-weight:700;transition:color .2s}
+.auth-toggle a:hover{color:var(--td)}
+.auth-error{color:var(--rs);font-size:12px;margin-top:8px;text-align:center;min-height:16px}
+.auth-message{color:var(--gr);font-size:12px;margin-top:8px;text-align:center;min-height:16px}
+
+/* ── ACCOUNT PAGE ── */
+.account-page{padding-top:65px}
+.account-header{background:var(--wm);border-bottom:2px solid var(--pm);padding:20px;display:flex;align-items:center;gap:16px;position:sticky;top:65px;z-index:50}
+.back-btn{background:none;border:none;font-family:'DM Sans',sans-serif;font-size:16px;color:var(--pd);cursor:pointer;transition:color .2s;font-weight:600}
+.back-btn:hover{color:var(--td)}
+.account-header h1{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;font-style:italic;color:var(--td);flex:1}
+.account-content{max-width:600px;margin:0 auto;padding:24px 16px 60px}
+.account-card{background:#fff;border:1.5px solid var(--pm);border-radius:20px;padding:24px;margin-bottom:20px;box-shadow:0 4px 24px #F4B8C820}
+.account-card h2{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--td);margin-bottom:18px}
+.account-card .form-group{margin-bottom:14px}
+.danger-zone{background:#fff5f5;border-color:#ffebee}
+.delete-account-btn{width:100%;padding:11px;background:#ff6b6b;color:#fff;border:none;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;margin-bottom:12px}
+.delete-account-btn:hover{background:#ff5252;transform:scale(1.01)}
+.danger-warning{font-size:12px;color:#c62828;font-weight:500}

@@ -1,6 +1,20 @@
 
-function showWelcome(){document.getElementById('welcome-overlay').style.display='flex';}
-function closeWelcome(){document.getElementById('welcome-overlay').style.display='none';}
+/* ══ FIREBASE INITIALIZATION ══ */
+const firebaseConfig = {
+  apiKey: "AIzaSyBF3xvwAriONTwAp4_NfWlpeh3os1WsbsQ",
+  authDomain: "my-spending-8111f.firebaseapp.com",
+  projectId: "my-spending-8111f",
+  storageBucket: "my-spending-8111f.firebasestorage.app",
+  messagingSenderId: "419116501873",
+  appId: "1:419116501873:web:0acd3b86a80499c94c04d0",
+  measurementId: "G-5HHF283PB8"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+/* ══ GLOBAL STATE ══ */
 const CATS={
   expense:['🍜 Food','🛵 Transport','🛍️ Shopping','💊 Health','📚 Education','🎮 Entertainment','💑 Wifey','🏠 Home Renting','📦 Other'],
   income:['💼 Salary','💸 Bonus','🎁 Gift','📈 Investment','📦 Other'],
@@ -12,29 +26,284 @@ const DAY_NAMES=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Sa
 let txType='expense',filterType='all',searchQ='',confirmCb=null;
 let barChart=null,pieChart=null,yearChart=null;
 let summaryView='year';
+let currentUser=null;
+let txArr=[];
+let budgets={};
 const now=new Date();
 
+/* ══ UTILITY FUNCTIONS ══ */
 function todayStr(){return now.toISOString().split('T')[0]}
 function fmtMoney(n){return new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND'}).format(n||0)}
 function fmtDate(s){const d=new Date(s+'T12:00:00');return DAY_NAMES[d.getDay()]+', '+MONTH_NAMES[d.getMonth()]+' '+d.getDate()}
 function getYM(s){const d=new Date(s+'T12:00:00');return{y:d.getFullYear(),m:d.getMonth(),w:Math.min(3,Math.floor((d.getDate()-1)/7))}}
 
-function loadTx(){try{const d=localStorage.getItem('ptx_v4');return d?JSON.parse(d):[]}catch{return[]}}
-function saveTx(a){try{localStorage.setItem('ptx_v4',JSON.stringify(a))}catch{}}
-function loadBudgets(){try{const d=localStorage.getItem('pbgt_v1');return d?JSON.parse(d):{}}catch{return{}}}
-function saveBudgets(b){try{localStorage.setItem('pbgt_v1',JSON.stringify(b))}catch{}}
+/* ══ AUTHENTICATION ══ */
+function openSignupModal(){
+  document.getElementById('signup-modal').classList.add('active');
+  document.getElementById('signup-email').value='';
+  document.getElementById('signup-password').value='';
+  document.getElementById('signup-error').textContent='';
+}
 
-let txArr=loadTx();
-let budgets=loadBudgets();
+function closeSignupModal(){
+  document.getElementById('signup-modal').classList.remove('active');
+}
+
+function openLoginModal(){
+  document.getElementById('login-modal').classList.add('active');
+  document.getElementById('login-email').value='';
+  document.getElementById('login-password').value='';
+  document.getElementById('login-error').textContent='';
+}
+
+function closeLoginModal(){
+  document.getElementById('login-modal').classList.remove('active');
+}
+
+function handleSignup(){
+  const email=document.getElementById('signup-email').value.trim();
+  const password=document.getElementById('signup-password').value;
+  const errorEl=document.getElementById('signup-error');
+  
+  if(!email||!password){
+    errorEl.textContent='Please fill in all fields';
+    return;
+  }
+  
+  auth.createUserWithEmailAndPassword(email,password)
+    .then(userCredential=>{
+      showToast('Welcome! Account created ♡');
+      closeSignupModal();
+      spawnConfetti();
+    })
+    .catch(error=>{
+      errorEl.textContent=error.message;
+    });
+}
+
+function handleLogin(){
+  const email=document.getElementById('login-email').value.trim();
+  const password=document.getElementById('login-password').value;
+  const errorEl=document.getElementById('login-error');
+  
+  if(!email||!password){
+    errorEl.textContent='Please fill in all fields';
+    return;
+  }
+  
+  auth.signInWithEmailAndPassword(email,password)
+    .then(userCredential=>{
+      showToast('Welcome back! ♡');
+      closeLoginModal();
+    })
+    .catch(error=>{
+      errorEl.textContent=error.message;
+    });
+}
+
+function toggleUserMenu(){
+  const dropdown=document.getElementById('user-dropdown');
+  dropdown.style.display=dropdown.style.display==='none'?'block':'none';
+}
+
+function logoutUser(){
+  auth.signOut().then(()=>{
+    showToast('See you next time! ♡');
+    closeUserMenu();
+  });
+}
+
+function goToAccountInfo(){
+  closeUserMenu();
+  showAccountPage();
+}
+
+function closeUserMenu(){
+  document.getElementById('user-dropdown').style.display='none';
+}
+
+function updateAuthUI(user){
+  const signupBtn=document.getElementById('signup-btn');
+  const loginBtn=document.getElementById('login-btn');
+  const userMenuWrapper=document.getElementById('user-menu-wrapper');
+  const userEmailDisplay=document.getElementById('user-email-display');
+  
+  if(user){
+    signupBtn.style.display='none';
+    loginBtn.style.display='none';
+    userMenuWrapper.style.display='block';
+    userEmailDisplay.textContent=user.email;
+  } else {
+    signupBtn.style.display='block';
+    loginBtn.style.display='block';
+    userMenuWrapper.style.display='none';
+  }
+}
+
+/* ══ ACCOUNT PAGE ══ */
+function showAccountPage(){
+  document.getElementById('tab-tracker').parentElement.parentElement.style.display='none';
+  document.querySelector('.main-tabs').style.display='none';
+  document.querySelector('.app-header').style.display='flex';
+  document.querySelector('footer').style.display='none';
+  document.getElementById('account-page').style.display='block';
+  
+  if(currentUser){
+    document.getElementById('account-email').value=currentUser.email;
+  }
+}
+
+function goBackToTracker(){
+  document.getElementById('tab-tracker').parentElement.parentElement.style.display='block';
+  document.querySelector('.main-tabs').style.display='flex';
+  document.querySelector('footer').style.display='block';
+  document.getElementById('account-page').style.display='none';
+  document.getElementById('user-dropdown').style.display='none';
+  renderTracker();
+}
+
+function updateAccountInfo(){
+  const nameInput=document.getElementById('account-name');
+  const displayName=nameInput.value.trim();
+  const messageEl=document.getElementById('account-message');
+  
+  if(!currentUser)return;
+  
+  if(displayName){
+    currentUser.updateProfile({displayName:displayName})
+      .then(()=>{
+        messageEl.style.color='var(--gr)';
+        messageEl.textContent='Profile updated successfully! ♡';
+        setTimeout(()=>messageEl.textContent='',3000);
+      })
+      .catch(error=>{
+        messageEl.style.color='var(--rs)';
+        messageEl.textContent=error.message;
+      });
+  } else {
+    messageEl.style.color='var(--rs)';
+    messageEl.textContent='Please enter a display name';
+  }
+}
+
+function deleteAccountConfirm(){
+  if(confirm('Are you sure? This action cannot be undone. All your data will be permanently deleted.')){
+    deleteUserAccount();
+  }
+}
+
+function deleteUserAccount(){
+  if(!currentUser)return;
+  
+  const userId=currentUser.uid;
+  currentUser.delete()
+    .then(()=>{
+      db.collection('users').doc(userId).delete();
+      db.collection('transactions').where('userId','==',userId).get().then(snap=>{
+        snap.forEach(doc=>doc.ref.delete());
+      });
+      db.collection('budgets').where('userId','==',userId).get().then(snap=>{
+        snap.forEach(doc=>doc.ref.delete());
+      });
+      showToast('Account deleted');
+      goBackToTracker();
+    })
+    .catch(error=>{
+      alert('Error deleting account: '+error.message);
+    });
+}
+
+/* ══ FIRESTORE OPERATIONS ══ */
+async function loadTx(){
+  if(!currentUser)return[];
+  try{
+    const snap=await db.collection('transactions').where('userId','==',currentUser.uid).get();
+    return snap.docs.map(doc=>({id:doc.id,...doc.data()}));
+  } catch(e){
+    console.error('Error loading transactions:',e);
+    return[];
+  }
+}
+
+async function saveTx(arr){
+  if(!currentUser)return;
+  try{
+    const batch=db.batch();
+    const snap=await db.collection('transactions').where('userId','==',currentUser.uid).get();
+    snap.forEach(doc=>batch.delete(doc.ref));
+    arr.forEach(tx=>{
+      const docRef=db.collection('transactions').doc();
+      batch.set(docRef,{...tx,userId:currentUser.uid});
+    });
+    await batch.commit();
+  } catch(e){
+    console.error('Error saving transactions:',e);
+  }
+}
+
+async function loadBudgets(){
+  if(!currentUser)return{};
+  try{
+    const snap=await db.collection('budgets').where('userId','==',currentUser.uid).get();
+    const result={};
+    snap.forEach(doc=>{
+      result[doc.data().month]=doc.data().budgets;
+    });
+    return result;
+  } catch(e){
+    console.error('Error loading budgets:',e);
+    return{};
+  }
+}
+
+async function saveBudgets(bgt){
+  if(!currentUser)return;
+  try{
+    const batch=db.batch();
+    const snap=await db.collection('budgets').where('userId','==',currentUser.uid).get();
+    snap.forEach(doc=>batch.delete(doc.ref));
+    Object.entries(bgt).forEach(([month,budgets])=>{
+      const docRef=db.collection('budgets').doc();
+      batch.set(docRef,{userId:currentUser.uid,month,budgets});
+    });
+    await batch.commit();
+  } catch(e){
+    console.error('Error saving budgets:',e);
+  }
+}
+
+/* ══ AUTH STATE LISTENER ══ */
+auth.onAuthStateChanged(async(user)=>{
+  currentUser=user;
+  updateAuthUI(user);
+  
+  if(user){
+    txArr=await loadTx();
+    budgets=await loadBudgets();
+    renderTracker();
+    showWelcome();
+  } else {
+    txArr=[];
+    budgets={};
+    document.getElementById('tab-tracker').style.display='block';
+    document.getElementById('tab-summary').style.display='block';
+    document.getElementById('tab-budget').style.display='block';
+    const mainTabs=document.querySelectorAll('.main-tab');
+    mainTabs.forEach(tab=>tab.style.opacity='0.5');
+  }
+});
 
 /* ── TABS ── */
 function switchTab(t,btn){
+  if(!currentUser){
+    alert('Please log in to use this feature');
+    return;
+  }
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.main-tab').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+t).classList.add('active');
   btn.classList.add('active');
   if(t==='summary'){populateYearSelect();renderSummary();}
-  
   if(t==='budget'){initBudgetSelects();renderBudget();}
 }
 
@@ -81,7 +350,11 @@ function handleAmtKey(e,el){
 }
 
 /* ── ADD TX ── */
-function addTx(){
+async function addTx(){
+  if(!currentUser){
+    alert('Please log in to add transactions');
+    return;
+  }
   const raw=document.getElementById('inp-amount').value.replace(/[^0-9]/g,'');
   const amt=parseInt(raw);
   if(!amt||amt<=0){const i=document.getElementById('inp-amount');i.style.borderColor='var(--pd)';setTimeout(()=>i.style.borderColor='',800);return;}
@@ -89,15 +362,15 @@ function addTx(){
   const cat=txType==='savings'?'🐷 Monthly Savings':document.getElementById('inp-cat').value;
   const date=document.getElementById('inp-date').value||todayStr();
   txArr.unshift({id:Date.now(),type:txType,amount:amt,cat,note,date});
-  saveTx(txArr);
+  await saveTx(txArr);
   document.getElementById('inp-amount').value='';
   document.getElementById('inp-note').value='';
   renderTracker();showToast('Added~ ♡');spawnConfetti();spawnPetals();
 }
 
 /* ── DELETE ── */
-function deleteTx(id){
-  confirmCb=()=>{txArr=txArr.filter(t=>t.id!==id);saveTx(txArr);renderTracker();closeConfirm();};
+async function deleteTx(id){
+  confirmCb=async()=>{txArr=txArr.filter(t=>t.id!==id);await saveTx(txArr);renderTracker();closeConfirm();};
   document.getElementById('confirm-overlay').style.display='block';
 }
 function closeConfirm(){document.getElementById('confirm-overlay').style.display='none';confirmCb=null;}
@@ -369,7 +642,7 @@ function initBudgetSelects(){
 
 function budgetKey(y,m){return`${y}-${String(m+1).padStart(2,'0')}`;}
 
-function renderBudget(){
+async function renderBudget(){
   const m=parseInt(document.getElementById('budget-month-sel').value);
   const y=parseInt(document.getElementById('budget-year-sel').value);
   document.getElementById('budget-month-label').textContent=`${MONTH_NAMES[m]} ${y}`;
@@ -422,20 +695,24 @@ function handleBgtKey(e,el){
   }
 }
 
-function saveBudgetItem(cat,y,m){
+async function saveBudgetItem(cat,y,m){
   const key=budgetKey(y,m);
   const inpId='bgt-'+cat.replace(/[^a-z0-9]/gi,'_');
   const el=document.getElementById(inpId);
   const val=parseInt(el.value.replace(/[^0-9]/g,''))||0;
   if(!budgets[key])budgets[key]={};
   budgets[key][cat]=val;
-  saveBudgets(budgets);
+  await saveBudgets(budgets);
   renderBudget();
   showToast('Budget saved ♡');
 }
 
+function showWelcome(){
+  if(!currentUser)return;
+  document.getElementById('welcome-overlay').style.display='flex';
+}
+function closeWelcome(){document.getElementById('welcome-overlay').style.display='none';}
+
 /* ── INIT ── */
 document.getElementById('inp-date').value=todayStr();
 populateCats();
-renderTracker();
-showWelcome();
